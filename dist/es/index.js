@@ -8,6 +8,10 @@ function resultHasErrors(result) {
   return result.results.some(res => res.errored);
 }
 
+function resultHawWarnings(result) {
+  return result.results.some(res => res.warnings.length !== 0);
+}
+
 function normalizePath(id) {
   return path.relative(process.cwd(), id).split(path.sep).join("/");
 }
@@ -26,7 +30,12 @@ function stylelintPlugin(options = {}) {
       }, options)).then(result => {
         if (result.output) {
           process.stdout.write(result.output);
-          if (resultHasErrors(result)) {
+
+          if (resultHawWarnings(result) && options.throwOnWarning) {
+            throw new Error('Warning(s) were found');
+          }
+
+          if (resultHasErrors(result) && options.throwOnError) {
             throw new Error('Error(s) were found');
           }
         }
